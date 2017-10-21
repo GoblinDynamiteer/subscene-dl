@@ -23,6 +23,11 @@ def get_movie_links(soup):
 
     return found_movie_links
 
+#FIX
+def get_subtitles(soup):
+    for table in soup.find_all('tbody'): # <tr>
+        print(table)
+
 def check_imdb(soup):
     for imdb_link in soup.find_all("a", class_="imdb"):
         if imdb in imdb_link.get('href'):
@@ -45,9 +50,10 @@ imdb = sys.argv[3]
 url = site + "/subtitles/title?q=" + title
 
 soup_search = BeautifulSoup(get_html(url), 'html.parser')
-movie_links = get_movie_links(soup_search)
+for movie_link in get_movie_links(soup_search):
+    soup_movie = BeautifulSoup(get_html(site + movie_link), 'html.parser')
+    if check_imdb(soup_movie) == True:
+        found_movie_soup = soup_movie
+        break
 
-soup_movie = BeautifulSoup(get_html(site + movie_url), 'html.parser')
-
-if check_imdb(soup_movie) == True:
-    print("found! ;D")
+get_subtitles(found_movie_soup)
