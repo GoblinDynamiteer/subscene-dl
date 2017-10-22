@@ -17,6 +17,11 @@ def get_html(url):
 
 def get_movie_links(soup):
     found_movie_links = []
+
+    exact_match = soup.find_all('h2', class_="exact")
+    if len(exact_match) == 0:
+        print("No exact matches!") # Do something with this?
+
     for link in soup.find_all('a'): # <A>
         if "subtitles/" + title in link.get('href'):
             found_movie_links.append(link.get('href'))
@@ -104,23 +109,34 @@ class Subtitle:
     def download(self):
         print("Downloading.... ")
 
+#Test args: jungle tt3758172 Jungle.2017.1080p.WEB-DL.H264.AC3-EVO
+#arguments = len(sys.argv)
 
-#url = sys.argv[1]
-#language = sys.argv[1]
-title = sys.argv[1]
-year = sys.argv[2]
-imdb = sys.argv[3]
+title = sys.argv[1].replace(" ", "+")         #Jungle
+imdb = sys.argv[2]          #tt3758172
+release_name = sys.argv[3]  #Jungle.2017.1080p.WEB-DL.H264.AC3-EVO
 
 soup_search = make_soup(site + "/subtitles/title?q=" + title);
 
+found = False
+count = 0
+
 for movie_link in get_movie_links(soup_search):
     soup_movie = make_soup(site + movie_link);
+    count += 1
+    #print("Searching.")
+    if count > 10:
+        break
     if check_imdb(soup_movie) == True:
-        found_movie_soup = soup_movie
+        found = True
+        subtitles = get_subtitles(soup_movie)
         break
 
-subtitles = get_subtitles(found_movie_soup)
-for sub in subtitles:
-    if sub.lang == "English":
-        sub.print_info()
-        print("\n")
+if found == False:
+    print("Did not find movie!")
+
+else:
+    for sub in subtitles:
+        if sub.lang == "English":
+            sub.print_info()
+            print("\n")
