@@ -30,14 +30,22 @@ def get_subtitles(soup):
     rows = tables[0].findChildren('tr')
     for row in rows:
         cols = row.findChildren('td')
-        counter = 0
-        for col in cols:
-            print(counter)
-            counter += 1
-            try:
-                print(col.text.strip())
-            except:
-                pass
+        try:
+            link = cols[0].find('a').get('href')
+            print("Link: " + link)
+            lang = cols[0].text.strip()
+            cut = re.sub('\s\s+', '|', lang).split('|')
+            lang = cut[0]
+            release = cut[1]
+            print("Lang: " + lang)
+            print("Release: " + release)
+            user = cols[3].text.strip()
+            print("Uploader: " + user)
+            comment = cols[4].text.strip()
+            print("Comment: " + comment)
+        except:
+            pass
+        print("\n\n")
 
 # Check movie pages for matching IMDb-id
 def check_imdb(soup):
