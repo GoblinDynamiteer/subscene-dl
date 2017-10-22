@@ -32,20 +32,21 @@ def get_subtitles(soup):
         cols = row.findChildren('td')
         try:
             link = cols[0].find('a').get('href')
-            print("Link: " + link)
+            #print("Link: " + link)
             lang = cols[0].text.strip()
             cut = re.sub('\s\s+', '|', lang).split('|')
             lang = cut[0]
             release = cut[1]
-            print("Lang: " + lang)
-            print("Release: " + release)
+            #print("Lang: " + lang)
+            #print("Release: " + release)
             user = cols[3].text.strip()
-            print("Uploader: " + user)
+            #print("Uploader: " + user)
             comment = cols[4].text.strip()
-            print("Comment: " + comment)
+            #print("Comment: " + comment)
+            subtitles.append(Subtitle(link, lang, release, "N/A", user, comment))
         except:
             pass
-        print("\n\n")
+    return subtitles
 
 # Check movie pages for matching IMDb-id
 def check_imdb(soup):
@@ -61,19 +62,34 @@ def make_soup(url):
         try:
             soup = BeautifulSoup(get_html(url), 'html.parser')
             success = True
-
         except:
             pass
-
     return soup
 
 
-class subtitle:
-    def __init__(url, lang, hearing_impaired, user):
+class Subtitle:
+    def __init__(self, url, lang, release, hearing_impaired, user, comment):
         self.url = url
         self.lang = lang
+        self.release = release
         self.hearing_impaired = hearing_impaired
         self.user = user
+        self.comment = comment
+
+    def print_info(self):
+        print("Url: " + site + self.url)
+        print("Language: " + self.lang)
+        print("Release: " + self.release)
+        print("Uploader: " + self.user)
+        try:
+            print("Comment: " + self.comment)
+        except:
+            print("Comment: [Error]")
+            pass
+
+    def download(self):
+        print("Downloading.... ")
+
 
 #url = sys.argv[1]
 #language = sys.argv[1]
@@ -89,4 +105,4 @@ for movie_link in get_movie_links(soup_search):
         found_movie_soup = soup_movie
         break
 
-get_subtitles(found_movie_soup)
+subtitles = get_subtitles(found_movie_soup)
