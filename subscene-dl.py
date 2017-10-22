@@ -50,13 +50,22 @@ def get_subtitles(soup):
         except:
             failed += 1
             pass
-    print("Found:" + str(found) + " Skipped: " + str(failed))
+    print("Subs found:" + str(found) + " Skipped: " + str(failed))
     return subtitles
 
 # Check movie pages for matching IMDb-id
 def check_imdb(soup):
     for imdb_link in soup.find_all("a", class_="imdb"):
         if imdb in imdb_link.get('href'):
+            print("Found IMDB-id!")
+            return True
+    return False
+
+def check_release_name(soup):
+    matches = soup.find_all('span')
+    for match in matches:
+        if release_name in match.text.strip():
+            print("Found release name!")
             return True
     return False
 
@@ -109,6 +118,9 @@ class Subtitle:
     def download(self):
         print("Downloading.... ")
 
+    def matches_relase_name(self):
+        return True if self.release == release_name else False
+
 #Test args: jungle tt3758172 Jungle.2017.1080p.WEB-DL.H264.AC3-EVO
 #arguments = len(sys.argv)
 
@@ -117,6 +129,7 @@ imdb = sys.argv[2]          #tt3758172
 release_name = sys.argv[3]  #Jungle.2017.1080p.WEB-DL.H264.AC3-EVO
 
 soup_search = make_soup(site + "/subtitles/title?q=" + title);
+#search by release ... subtitles/release?q=
 
 found = False
 count = 0
@@ -127,7 +140,7 @@ for movie_link in get_movie_links(soup_search):
     #print("Searching.")
     if count > 10:
         break
-    if check_imdb(soup_movie) == True:
+    if check_imdb(soup_movie) == True or check_release_name(soup_movie) == True:
         found = True
         subtitles = get_subtitles(soup_movie)
         break
@@ -136,7 +149,8 @@ if found == False:
     print("Did not find movie!")
 
 else:
+    print("\nListing subtitles that matches english and release name: ")
     for sub in subtitles:
-        if sub.lang == "English":
+        if sub.lang == "English" and sub.matches_relase_name():
             sub.print_info()
             print("\n")
