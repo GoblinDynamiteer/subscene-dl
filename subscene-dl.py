@@ -21,7 +21,7 @@ def get_movie_links(soup):
 
     exact_match = soup.find_all('h2', class_="exact")
     if len(exact_match) == 0:
-        print("No exact matches!") # Do something with this?
+        return found_movie_links #No exact matches
 
     for link in soup.find_all('a'): # <A>
         if "subtitles/" + title in link.get('href'):
@@ -51,14 +51,14 @@ def get_subtitles(soup):
         except:
             failed += 1
             pass
-    print("Subs found:" + str(found) + " Skipped: " + str(failed))
+    #print("Subs found:" + str(found) + " Skipped: " + str(failed))
     return subtitles
 
 # Check movie pages for matching IMDb-id
 def check_imdb(soup):
     for imdb_link in soup.find_all("a", class_="imdb"):
         if imdb in imdb_link.get('href'):
-            print("Found IMDB-id!")
+            #print("Found IMDB-id!")
             return True
     return False
 
@@ -66,7 +66,7 @@ def check_release_name(soup):
     matches = soup.find_all('span')
     for match in matches:
         if release_name in match.text.strip():
-            print("Found release name!")
+            #print("Found release name!")
             return True
     return False
 
@@ -106,7 +106,7 @@ class Subtitle:
         self.user = user
         self.comment = comment
         self.hearing_impaired = string_hearing_impaired(comment)
-        self.download_link = ""
+        self.download_link = None
 
     def print_info(self):
         print("Url: " + site + self.url)
@@ -120,10 +120,13 @@ class Subtitle:
     def matches_relase_name(self):
         return True if self.release == release_name else False
 
-    def gen_download_link(self, show_link = False):
-        soup = make_soup(site + self.url)
-        self.download_link = soup.find('div', class_ = 'download').find('a').get('href')
-        if show_link:
+    def download_url(self):
+        if self.download_link:
+            return site + self.download_link
+
+        else:
+            soup = make_soup(site + self.url)
+            self.download_link = soup.find('div', class_ = 'download').find('a').get('href')
             return site + self.download_link
 
 #Test args: jungle tt3758172 Jungle.2017.1080p.WEB-DL.H264.AC3-EVO
@@ -154,8 +157,7 @@ if found == False:
     print("Did not find movie!")
 
 else:
-    print("\nListing subtitles that matches english and release name: ")
     for sub in subtitles:
         if sub.lang == "English" and sub.matches_relase_name():
-            print(sub.gen_download_link(True))
-            print("\n")
+            print(sub.download_url())
+            break;
