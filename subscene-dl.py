@@ -2,7 +2,8 @@
 import sys
 import re #regex
 from bs4 import BeautifulSoup
-from urllib.request import Request, urlopen
+from urllib.request import Request, urlopen, urlretrieve
+import urllib
 
 header = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWeb"
@@ -105,6 +106,7 @@ class Subtitle:
         self.user = user
         self.comment = comment
         self.hearing_impaired = string_hearing_impaired(comment)
+        self.download_link = ""
 
     def print_info(self):
         print("Url: " + site + self.url)
@@ -115,11 +117,14 @@ class Subtitle:
         hi = "HI" if self.hearing_impaired else "Not HI"
         print("Hearing impaired: " + hi)
 
-    def download(self):
-        print("Downloading.... ")
-
     def matches_relase_name(self):
         return True if self.release == release_name else False
+
+    def gen_download_link(self, show_link = False):
+        soup = make_soup(site + self.url)
+        self.download_link = soup.find('div', class_ = 'download').find('a').get('href')
+        if show_link:
+            return site + self.download_link
 
 #Test args: jungle tt3758172 Jungle.2017.1080p.WEB-DL.H264.AC3-EVO
 #arguments = len(sys.argv)
@@ -140,7 +145,7 @@ for movie_link in get_movie_links(soup_search):
     #print("Searching.")
     if count > 10:
         break
-    if check_imdb(soup_movie) == True or check_release_name(soup_movie) == True:
+    if check_imdb(soup_movie) or check_release_name(soup_movie):
         found = True
         subtitles = get_subtitles(soup_movie)
         break
@@ -152,5 +157,5 @@ else:
     print("\nListing subtitles that matches english and release name: ")
     for sub in subtitles:
         if sub.lang == "English" and sub.matches_relase_name():
-            sub.print_info()
+            print(sub.gen_download_link(True))
             print("\n")
