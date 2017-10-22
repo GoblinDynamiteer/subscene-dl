@@ -19,20 +19,46 @@ def get_movie_links(soup):
     found_movie_links = []
     for link in soup.find_all('a'): # <A>
         if "subtitles/" + title in link.get('href'):
-            found_movie_links.append(link.get('href'));
+            found_movie_links.append(link.get('href'))
 
     return found_movie_links
 
 #FIX
 def get_subtitles(soup):
-    for table in soup.find_all('tbody'): # <tr>
-        print(table)
+    subtitles = []
+    tables = soup.findChildren('table')
+    rows = tables[0].findChildren('tr')
+    for row in rows:
+        cols = row.findChildren('td')
+        counter = 0
+        for col in cols:
+            print(counter)
+            counter += 1
+            try:
+                print(col.text.strip())
+            except:
+                pass
 
+# Check movie pages for matching IMDb-id
 def check_imdb(soup):
     for imdb_link in soup.find_all("a", class_="imdb"):
         if imdb in imdb_link.get('href'):
             return True
     return False
+
+# Generate soup from url
+def make_soup(url):
+    success = False
+    while success == False:
+        try:
+            soup = BeautifulSoup(get_html(url), 'html.parser')
+            success = True
+
+        except:
+            pass
+
+    return soup
+
 
 class subtitle:
     def __init__(url, lang, hearing_impaired, user):
@@ -47,11 +73,10 @@ title = sys.argv[1]
 year = sys.argv[2]
 imdb = sys.argv[3]
 
-url = site + "/subtitles/title?q=" + title
+soup_search = make_soup(site + "/subtitles/title?q=" + title);
 
-soup_search = BeautifulSoup(get_html(url), 'html.parser')
 for movie_link in get_movie_links(soup_search):
-    soup_movie = BeautifulSoup(get_html(site + movie_link), 'html.parser')
+    soup_movie = make_soup(site + movie_link);
     if check_imdb(soup_movie) == True:
         found_movie_soup = soup_movie
         break
