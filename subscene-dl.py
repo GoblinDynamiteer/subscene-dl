@@ -28,24 +28,24 @@ def get_subtitles(soup):
     subtitles = []
     tables = soup.findChildren('table')
     rows = tables[0].findChildren('tr')
+    failed = 0
+    found = 0
     for row in rows:
         cols = row.findChildren('td')
         try:
             link = cols[0].find('a').get('href')
-            #print("Link: " + link)
             lang = cols[0].text.strip()
             cut = re.sub('\s\s+', '|', lang).split('|')
             lang = cut[0]
             release = cut[1]
-            #print("Lang: " + lang)
-            #print("Release: " + release)
             user = cols[3].text.strip()
-            #print("Uploader: " + user)
             comment = cols[4].text.strip()
-            #print("Comment: " + comment)
-            subtitles.append(Subtitle(link, lang, release, "N/A", user, comment))
+            subtitles.append(Subtitle(link, lang, release, user, comment))
+            found += 1
         except:
+            failed += 1
             pass
+    print("Found:" + str(found) + " Skipped: " + str(failed))
     return subtitles
 
 # Check movie pages for matching IMDb-id
@@ -66,26 +66,40 @@ def make_soup(url):
             pass
     return soup
 
+def strip_invalid_chars(string):
+    return re.sub('[^\x00-\x7f]',' ', string)
+
+def string_hearing_impaired(string):
+    string = strip_invalid_chars(string)
+    hi = re.compile('\sSDH', re.IGNORECASE) #Add more
+    nohi = re.compile('NON.SDH', re.IGNORECASE) #Add more
+    result_hi = hi.search(string)
+    result_nohi = nohi.search(string)
+    # FIX return values#
+    if result_hi != None and result_nohi == None:
+        return True
+    if result_hi == None:
+        return False
+    if result_hi != None and result_nohi != None:
+        return False
 
 class Subtitle:
-    def __init__(self, url, lang, release, hearing_impaired, user, comment):
+    def __init__(self, url, lang, release, user, comment):
         self.url = url
         self.lang = lang
         self.release = release
-        self.hearing_impaired = hearing_impaired
         self.user = user
         self.comment = comment
+        self.hearing_impaired = string_hearing_impaired(comment)
 
     def print_info(self):
         print("Url: " + site + self.url)
         print("Language: " + self.lang)
         print("Release: " + self.release)
         print("Uploader: " + self.user)
-        try:
-            print("Comment: " + self.comment)
-        except:
-            print("Comment: [Error]")
-            pass
+        print("Comment: " + strip_invalid_chars(self.comment))
+        hi = "HI" if self.hearing_impaired else "Not HI"
+        print("Hearing impaired: " + hi)
 
     def download(self):
         print("Downloading.... ")
@@ -106,3 +120,7 @@ for movie_link in get_movie_links(soup_search):
         break
 
 subtitles = get_subtitles(found_movie_soup)
+for sub in subtitles:
+    if sub.lang == "English":
+        sub.print_info()
+        print("\n")
